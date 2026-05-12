@@ -1,8 +1,36 @@
+<div align="center">
+
 # BioSci-Radar
 
-[中文说明](README.zh.md) | English
+<p>
+  <a href="README.zh.md">
+    <img src="https://img.shields.io/badge/%E4%B8%AD%E6%96%87%E8%AF%B4%E6%98%8E-README-0f172a?style=for-the-badge&logo=readme&logoColor=white" alt="Chinese README">
+  </a>
+  <img src="https://img.shields.io/badge/English-README-2563eb?style=for-the-badge&logo=readme&logoColor=white" alt="English README">
+</p>
 
-BioSci-Radar is a local-first literature workspace for bioinformatics, multi-omics, and transferable ML/DL methods. It opens with a bilingual welcome screen, lets you launch a focused search from sample keywords or manual input, and then scrolls into a local workspace for summary review and paper browsing.
+<p>
+  <img src="https://img.shields.io/badge/Local--First-Workspace-16a34a?style=flat-square" alt="Local-first workspace">
+  <img src="https://img.shields.io/badge/Bilingual-ZH%20%2F%20EN-7c3aed?style=flat-square" alt="Bilingual">
+  <img src="https://img.shields.io/badge/Python-3.11%2B-2563eb?style=flat-square&logo=python&logoColor=white" alt="Python 3.11+">
+  <img src="https://img.shields.io/badge/Notion-Optional-111827?style=flat-square&logo=notion&logoColor=white" alt="Notion optional">
+</p>
+
+<p><strong>A local-first literature workspace for bioinformatics, multi-omics, and transferable ML/DL methods.</strong></p>
+
+<p>
+  Start from sample keywords or your own query, then move into a bilingual workspace for focused paper discovery,
+  frequency insights, and paginated browsing.
+</p>
+
+<p>
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#tutorial">Tutorial</a> ·
+  <a href="#common-commands">Commands</a> ·
+  <a href="#notion-sync">Notion Sync</a>
+</p>
+
+</div>
 
 ![docs/images/homepage-overview.png](image.png)
 

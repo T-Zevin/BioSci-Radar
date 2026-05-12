@@ -1,8 +1,36 @@
+<div align="center">
+
 # BioSci-Radar
 
-中文 | [English](README.md)
+<p>
+  <img src="https://img.shields.io/badge/%E4%B8%AD%E6%96%87-%E8%AF%B4%E6%98%8E-0f172a?style=for-the-badge&logo=readme&logoColor=white" alt="中文说明">
+  <a href="README.md">
+    <img src="https://img.shields.io/badge/English-README-2563eb?style=for-the-badge&logo=readme&logoColor=white" alt="English README">
+  </a>
+</p>
 
-BioSci-Radar 是一个面向生物信息学、多组学分析以及可迁移机器学习/深度学习方法的本地文献工作台。它会先展示一个双语初始页面，你可以从示例关键词直接启动，也可以手动输入主题，然后下滑进入工作台查看频数概览和分页后的论文列表。
+<p>
+  <img src="https://img.shields.io/badge/%E6%9C%AC%E5%9C%B0%E4%BC%98%E5%85%88-Workspace-16a34a?style=flat-square" alt="本地优先">
+  <img src="https://img.shields.io/badge/%E5%8F%8C%E8%AF%AD-ZH%20%2F%20EN-7c3aed?style=flat-square" alt="双语">
+  <img src="https://img.shields.io/badge/Python-3.11%2B-2563eb?style=flat-square&logo=python&logoColor=white" alt="Python 3.11+">
+  <img src="https://img.shields.io/badge/Notion-%E5%8F%AF%E9%80%89-111827?style=flat-square&logo=notion&logoColor=white" alt="Notion 可选">
+</p>
+
+<p><strong>一个面向生物信息学、多组学与可迁移机器学习 / 深度学习方法的本地优先文献工作台。</strong></p>
+
+<p>
+  你可以从示例关键词或自定义主题开始检索，然后进入双语工作区，查看频数概览、
+  结果汇总与分页后的论文列表。
+</p>
+
+<p>
+  <a href="#快速开始">快速开始</a> ·
+  <a href="#使用教程">使用教程</a> ·
+  <a href="#常用命令">常用命令</a> ·
+  <a href="#notion-同步">Notion 同步</a>
+</p>
+
+</div>
 
 ![docs/images/homepage-overview.png](image.png)
 
