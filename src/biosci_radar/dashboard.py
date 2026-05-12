@@ -3,8 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import html
+import io
 import json
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
+import zipfile
 
 from .collectors import collect_all
 from .config import load_config, with_focus_terms
@@ -26,7 +28,7 @@ def serve(host: str = "127.0.0.1", port: int = 8765) -> None:
 class Handler(BaseHTTPRequestHandler):
     def do_HEAD(self) -> None:
         route = urlparse(self.path).path
-        if route in {"/", "/index.html", "/api/papers", "/api/fetch"}:
+        if route in {"/", "/index.html", "/api/papers", "/api/fetch", "/api/export"}:
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
@@ -34,9 +36,13 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404)
 
     def do_GET(self) -> None:
-        route = urlparse(self.path).path
+        parsed = urlparse(self.path)
+        route = parsed.path
         if route == "/api/papers":
             self.handle_load_latest()
+            return
+        if route == "/api/export":
+            self.handle_export(parsed.query)
             return
         if route in {"/", "/index.html"}:
             self.html_response(render_dashboard())
@@ -90,6 +96,41 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as exc:
             self.json_response({"error": str(exc)}, status=500)
 
+    def handle_export(self, query: str) -> None:
+        try:
+            from .markdown_export import export_markdown
+
+            params = parse_qs(query or "")
+            lang = (params.get("lang") or ["both"])[0].strip().lower() or "both"
+            if lang not in {"zh", "en", "both"}:
+                raise ValueError("lang must be zh, en, or both")
+            latest = load_latest()
+            paths = export_markdown(latest, lang=lang)
+            if lang == "both":
+                archive = io.BytesIO()
+                with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                    for path in paths:
+                        zf.write(path, arcname=path.name)
+                filename = export_filename(latest, "both", "zip")
+                self.binary_response(
+                    archive.getvalue(),
+                    content_type="application/zip",
+                    filename=filename,
+                )
+                return
+
+            path = paths[0]
+            filename = export_filename(latest, lang, "md")
+            self.binary_response(
+                path.read_bytes(),
+                content_type="text/markdown; charset=utf-8",
+                filename=filename,
+            )
+        except FileNotFoundError as exc:
+            self.json_response({"error": str(exc)}, status=404)
+        except Exception as exc:
+            self.json_response({"error": str(exc)}, status=400)
+
     def html_response(self, body: str) -> None:
         payload = body.encode("utf-8")
         self.send_response(200)
@@ -105,6 +146,20 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)
+
+    def binary_response(self, payload: bytes, content_type: str, filename: str, status: int = 200) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+        self.end_headers()
+        self.wfile.write(payload)
+
+
+def export_filename(result: FetchResult, lang: str, suffix: str) -> str:
+    stamp = result.generated_at.replace(":", "").replace("-", "").replace("T", "-")
+    label = "both" if lang == "both" else lang
+    return f"biosci-radar-{stamp}-{label}.{suffix}"
 
 
 def render_dashboard() -> str:
@@ -204,6 +259,15 @@ def render_dashboard() -> str:
             <input id="limitInput" type="number" min="5" max="200" value="60">
           </label>
           <button id="fetchButton" class="primary" data-i18n="action.fetch">抓取文献</button>
+        </div>
+        <div class="control-actions">
+          <div class="export-group">
+            <span class="export-label" data-i18n="action.exportLabel">导出汇总</span>
+            <button id="exportZhButton" data-export-lang="zh" data-i18n="action.exportZh">导出中文</button>
+            <button id="exportEnButton" data-export-lang="en" data-i18n="action.exportEn">Export English</button>
+            <button id="exportBothButton" data-export-lang="both" data-i18n="action.exportBoth">双语 ZIP</button>
+          </div>
+          <span class="export-hint" data-i18n="action.exportHint">会同时写入 data/exports，并下载到浏览器。</span>
         </div>
         <p id="statusLine" class="status" data-i18n="status.ready">输入关键词后开始抓取，留空则按默认配置运行。</p>
       </section>
@@ -494,6 +558,25 @@ details {
   margin: 12px 0 0;
   font-size: 13px;
 }
+.control-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.export-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.export-label,
+.export-hint {
+  color: var(--muted);
+  font-size: 13px;
+}
 .summary-header,
 .list-header {
   display: flex;
@@ -610,6 +693,8 @@ details p { line-height: 1.5; }
   .workspace-head { flex-direction: column; align-items: stretch; }
   .controls { position: static; }
   .control-grid { grid-template-columns: 1fr; }
+  .control-actions { align-items: stretch; }
+  .export-group { align-items: stretch; }
   .summary-header, .list-header { flex-direction: column; }
   .grid { grid-template-columns: 1fr; }
 }
@@ -655,6 +740,11 @@ const translations = {
     'field.limit': '每源数量',
     'placeholder.focus': 'spatial transcriptomics, LUAD, graph neural network',
     'action.fetch': '抓取文献',
+    'action.exportLabel': '导出汇总',
+    'action.exportZh': '导出中文',
+    'action.exportEn': '导出英文',
+    'action.exportBoth': '双语 ZIP',
+    'action.exportHint': '会同时写入 data/exports，并下载到浏览器。',
     'action.prev': '上一页',
     'action.next': '下一页',
     'status.ready': '输入关键词后开始抓取，留空则按默认配置运行。',
@@ -663,6 +753,9 @@ const translations = {
     'status.loading': '正在抓取并汇总，请稍候。',
     'status.loaded': '已完成抓取与汇总。',
     'status.error': '抓取失败',
+    'status.exporting': '正在导出 Markdown，请稍候。',
+    'status.exported': '导出完成，已开始下载。',
+    'status.exportError': '导出失败',
     'summary.title': '关键词与频数概览',
     'summary.sources': '来源频数',
     'summary.paper_types': '论文类型',
@@ -717,6 +810,11 @@ const translations = {
     'field.limit': 'Per source',
     'placeholder.focus': 'spatial transcriptomics, LUAD, graph neural network',
     'action.fetch': 'Fetch papers',
+    'action.exportLabel': 'Export summary',
+    'action.exportZh': 'Export Chinese',
+    'action.exportEn': 'Export English',
+    'action.exportBoth': 'Bilingual ZIP',
+    'action.exportHint': 'This writes to data/exports and downloads the file in your browser.',
     'action.prev': 'Prev',
     'action.next': 'Next',
     'status.ready': 'Enter keywords to fetch, or leave blank to use the default profile.',
@@ -725,6 +823,9 @@ const translations = {
     'status.loading': 'Fetching papers and building summaries.',
     'status.loaded': 'Fetch completed.',
     'status.error': 'Fetch failed',
+    'status.exporting': 'Exporting Markdown now.',
+    'status.exported': 'Export completed. Download started.',
+    'status.exportError': 'Export failed',
     'summary.title': 'Keyword and Frequency Overview',
     'summary.sources': 'Source Counts',
     'summary.paper_types': 'Paper Types',
@@ -792,6 +893,7 @@ const focusInput = document.getElementById('focusInput');
 const daysInput = document.getElementById('daysInput');
 const limitInput = document.getElementById('limitInput');
 const fetchButton = document.getElementById('fetchButton');
+const exportButtons = document.querySelectorAll('[data-export-lang]');
 const statusLine = document.getElementById('statusLine');
 const subtitleLine = document.getElementById('subtitleLine');
 const summaryGrid = document.getElementById('summaryGrid');
@@ -825,6 +927,12 @@ langButtons.forEach((button) => {
 
 fetchButton.addEventListener('click', async () => {
   await runFetch();
+});
+
+exportButtons.forEach((button) => {
+  button.addEventListener('click', async () => {
+    await runExport(button.dataset.exportLang || 'both');
+  });
 });
 
 heroStartButton.addEventListener('click', () => {
@@ -872,6 +980,35 @@ async function runFetch() {
     setStatus(`${translations[currentLang]['status.error']}: ${error.message}`);
   } finally {
     fetchButton.disabled = false;
+  }
+}
+
+async function runExport(lang) {
+  setStatus(translations[currentLang]['status.exporting']);
+  exportButtons.forEach((button) => { button.disabled = true; });
+  try {
+    const response = await fetch(`/api/export?lang=${encodeURIComponent(lang)}`);
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || 'Export failed');
+    }
+    const blob = await response.blob();
+    const disposition = response.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="([^"]+)"/);
+    const filename = match ? match[1] : `biosci-radar-export.${lang === 'both' ? 'zip' : 'md'}`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setStatus(translations[currentLang]['status.exported']);
+  } catch (error) {
+    setStatus(`${translations[currentLang]['status.exportError']}: ${error.message}`);
+  } finally {
+    exportButtons.forEach((button) => { button.disabled = false; });
   }
 }
 
