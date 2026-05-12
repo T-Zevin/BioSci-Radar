@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.DS_Store
+.env
+config.toml
+data/papers/
+data/exports/
+data/notion_sync.json
+dist/
+build/
+*.egg-info/
+.Rhistory
+image.png
+image-1.png

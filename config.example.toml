@@ -1,0 +1,156 @@
+[general]
+language = "zh"
+timezone = "Asia/Shanghai"
+default_days = 14
+max_results_per_source = 60
+
+[scoring]
+min_dashboard_score = 0.25
+
+[sources]
+pubmed = true
+biorxiv = true
+medrxiv = true
+arxiv = true
+semantic_scholar = false
+
+[notion]
+papers_database_id_env = "NOTION_PAPERS_DATABASE_ID"
+token_env = "NOTION_TOKEN"
+
+[[topics]]
+id = "bioinformatics_multiomics"
+name = "Bioinformatics Multi-omics"
+priority = 5
+keywords = [
+  "multi-omics",
+  "multiomics",
+  "transcriptomics",
+  "proteomics",
+  "metabolomics",
+  "epigenomics",
+  "microbiome",
+  "integrative analysis",
+  "omics integration"
+]
+
+[[topics]]
+id = "single_cell_spatial"
+name = "Single-cell and Spatial Omics"
+priority = 5
+keywords = [
+  "single-cell",
+  "single cell",
+  "scRNA-seq",
+  "scATAC-seq",
+  "CITE-seq",
+  "spatial transcriptomics",
+  "spatial proteomics",
+  "cell-cell communication",
+  "tumor microenvironment"
+]
+
+[[topics]]
+id = "cancer_multiomics"
+name = "Cancer Multi-omics"
+priority = 5
+keywords = [
+  "cancer multi-omics",
+  "tumor",
+  "LUAD",
+  "lung adenocarcinoma",
+  "colorectal cancer",
+  "breast cancer",
+  "glioma",
+  "immune infiltration",
+  "survival prediction",
+  "treatment response"
+]
+
+[[topics]]
+id = "deep_learning_omics"
+name = "Deep Learning for Omics"
+priority = 5
+keywords = [
+  "deep learning",
+  "representation learning",
+  "self-supervised learning",
+  "contrastive learning",
+  "transfer learning",
+  "omics",
+  "gene expression",
+  "single-cell foundation model"
+]
+
+[[topics]]
+id = "graph_learning_biology"
+name = "Graph Learning for Biology"
+priority = 4
+keywords = [
+  "graph neural network",
+  "GNN",
+  "biological network",
+  "gene regulatory network",
+  "protein interaction network",
+  "pathway graph",
+  "cell graph"
+]
+
+[[topics]]
+id = "foundation_models_biology"
+name = "Foundation Models for Biology"
+priority = 5
+keywords = [
+  "foundation model",
+  "biological language model",
+  "gene language model",
+  "DNA language model",
+  "protein language model",
+  "cell foundation model",
+  "transformer"
+]
+
+[[topics]]
+id = "multimodal_biomedical_ai"
+name = "Multimodal Biomedical AI"
+priority = 4
+keywords = [
+  "multimodal learning",
+  "vision-language model",
+  "pathology foundation model",
+  "radiology foundation model",
+  "clinical multimodal",
+  "multi-modal biomedical"
+]
+
+[[topics]]
+id = "survival_clinical_prediction"
+name = "Survival and Clinical Prediction"
+priority = 4
+keywords = [
+  "survival prediction",
+  "prognosis model",
+  "risk stratification",
+  "Cox model",
+  "deep survival",
+  "treatment response prediction",
+  "precision medicine"
+]
+
+[arxiv]
+categories = [
+  "q-bio.QM",
+  "q-bio.GN",
+  "q-bio.CB",
+  "cs.LG",
+  "cs.AI",
+  "stat.ML",
+  "cs.CV"
+]
+
+[filters]
+excluded_keywords = [
+  "editorial",
+  "commentary",
+  "conference report"
+]
